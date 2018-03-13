@@ -1,0 +1,16 @@
+{
+  "name": "nei-proxy-middleware",
+  "version": "0.1.0",
+  "description": "A proxy middleware for NEI",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "gssify@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "content-type": "^1.0.4",
+    "raw-body": "^2.3.2",
+    "request": "^2.85.0"
+  }
+}
