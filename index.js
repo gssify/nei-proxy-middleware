@@ -25,7 +25,9 @@ function neiProxyMiddleware (options) {
         res.set(neiHeaders)
         res.end(result)
       })
-    }).catch(error => next(error))
+    }).catch(() => {
+      next()
+    })
   }
 
   function shouldProxy (req) {
