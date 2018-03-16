@@ -1,45 +1,31 @@
 const request = require('request')
-const getRawBody = require('raw-body')
-const contentType = require('content-type')
 const qs = require('querystring')
 
+const baseUrl = 'https://nei.netease.com:443/api/mockdata?'
+const neiHeaders = { 'Content-Type': 'text/plain;charset=utf-8' }
+
 function neiProxyMiddleware (options) {
-  const baseUrl = 'https://nei.netease.com:443/api/mockdata?'
-  const neiHeaders = { 'Content-Type': 'text/plain;charset=utf-8' }
   const { key, mockname = 'neimock', rule = '/api' } = options
 
   if (!key) throw new Error('Need NEI key')
 
   function middleware (req, res, next) {
-    shouldProxy(req).then(() => {
+    if (shouldProxy(req)) {
       const { path, method } = req
-      const query = qs.stringify({
-        key,
-        path,
-        method,
-        type: 3
-      })
-
-      request(baseUrl + query, (error, response, result) => {
-        if (error) return next(error)
+      const query = qs.stringify({ key, path, method, type: 3 })
+      request(baseUrl + query, (error, response, data) => {
+        if (error) return next()
+        const { code, result: { json } } = JSON.parse(data)
         res.set(neiHeaders)
-        res.end(result)
+        res.json(json)
       })
-    }).catch(() => {
+    } else {
       next()
-    })
+    }
   }
 
   function shouldProxy (req) {
-    return new Promise((resolve, reject) => {
-      if (!req.path.startsWith(rule)) return reject(new Error(`not start with ${rule}`))
-      if (req.query[mockname] !== undefined) return resolve()
-      getRawBody(req, {
-        encoding: contentType.parse(req).parameters.charset
-      }, (error, body) => {
-        error ? reject(new Error(error)) : ~body.indexOf(mockname) ? resolve() : reject(new Error(`not found ${mockname}`))
-      })
-    })
+    return req.path.startsWith(rule) && req.query[mockname] !== undefined
   }
 
   return middleware
